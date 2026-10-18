@@ -1,0 +1,51 @@
+- name: Play
+  hosts: minehosts
+  become: true
+  tasks:
+    - name: Ping hosts
+      ansible.builtin.ping:
+
+    - name: Print message
+      ansible.builtin.debug:
+        msg: working and reacheable
+
+    - name: Update
+      apt:
+        update_cache: yes
+
+    - name: Upgrade
+      apt:
+        upgrade: dist
+
+    - name: Autoremove
+      apt:
+        autoremove: yes
+        purge: yes
+
+    - name: Install apt packages
+      apt:
+        pkg:
+          - docker
+          - ufw
+        state: present
+
+    - name: Install PlayIT.gg
+      # PlayIT.GG for connecting to servers without using ports.
+      ansible.builtin.command: curl -fsSL https://packages.playit.gg/install.sh | bash
+
+    - name: UFW Incoming Deny
+      community.general.ufw:
+        direction: incoming
+        default: deny
+
+    - name: UFW Outgoing Allow
+      community.general.ufw:
+        direction: outgoing
+        default: allow
+
+    - name: Allow SSH
+      community.general.ufw:
+        rule: allow
+        port: "22"
+        proto: tcp
+        comment: "Allow SSH Port"
