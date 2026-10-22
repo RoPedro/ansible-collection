@@ -9,29 +9,25 @@
       ansible.builtin.debug:
         msg: working and reacheable
 
-    - name: Update
-      apt:
-        update_cache: yes
-
-    - name: Upgrade
-      apt:
-        upgrade: dist
-
-    - name: Autoremove
-      apt:
-        autoremove: yes
-        purge: yes
-
     - name: Install apt packages
-      apt:
+      ansible.builtin.apt:
         pkg:
           - docker
           - ufw
         state: present
+        update_cache: true
+        autoclean: true
+        autoremove: true
 
-    - name: Install PlayIT.gg
+    - name: Download PlayIT.GG
       # PlayIT.GG for connecting to servers without using ports.
-      ansible.builtin.command: curl -fsSL https://packages.playit.gg/install.sh | bash
+      ansible.builtin.uri:
+        url: https://packages.playit.gg/install.sh
+        dest: /tmp/playit_install.sh
+
+    - name: Install PlayIT.GG # Add checksum later when available
+      ansible.builtin.shell:
+        /tmp/playit_install.sh >> ~/logs/ansible/playit-log.txt
 
     - name: UFW Incoming Deny
       community.general.ufw:
@@ -49,3 +45,17 @@
         port: "22"
         proto: tcp
         comment: "Allow SSH Port"
+
+    - name: Allow common port ranges for Minecraft (TCP)
+      community.general.ufw:
+        rule: allow
+        port: 25500:25600
+        proto: tcp
+        comment: "Minecraft Java Port Range Allow"
+
+    - name: Allow port for Bedrock Minecraft (UDP)
+      community.general.ufw:
+        rule: allow
+        port: "19132"
+        proto: udp
+        comment: "Minecraft Bedrock Port Range Allow"
